@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild, AfterViewInit, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import * as THREE from 'three';
-
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 @Component({
   selector: 'app-solar-system',
   standalone: true,
@@ -30,7 +30,7 @@ export class SolarSystemComponent implements OnInit, AfterViewInit {
   private renderer!: THREE.WebGLRenderer;
   private sun!: THREE.Mesh;
   private planets: { mesh: THREE.Mesh, distance: number, speed: number, angle: number }[] = [];
-
+  private controls!: OrbitControls;
   // Variables pour l'interactivité (le laser et la souris)
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
@@ -56,15 +56,16 @@ export class SolarSystemComponent implements OnInit, AfterViewInit {
     const canvas = this.canvasRef.nativeElement;
     this.scene = new THREE.Scene();
 
-    // Caméra reculée pour bien voir les planètes
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.camera.position.z = 100;
-    this.camera.position.y = 30;
-    this.camera.lookAt(0, 0, 0);
+    this.camera.position.set(0, 30, 100); // position un peu plus haute et reculée
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
+
+    // Initialisation forcée des contrôles
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
   }
 
   private createUniverse() {
@@ -139,7 +140,7 @@ export class SolarSystemComponent implements OnInit, AfterViewInit {
 
   private animate = () => {
     requestAnimationFrame(this.animate);
-
+    this.controls.update();
     if (this.sun) {
       this.sun.rotation.y += 0.005;
     }
@@ -157,25 +158,15 @@ export class SolarSystemComponent implements OnInit, AfterViewInit {
   // --- LE RAYCASTER (CLIC SUR LES PLANÈTES) ---
   @HostListener('window:click', ['$event'])
   onClick(event: MouseEvent) {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    // 1. Convertir la position de la souris en coordonnées 3D (-1 à +1)
     this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    // 2. Tirer le laser depuis la caméra
     this.raycaster.setFromCamera(this.mouse, this.camera);
-
-    // 3. Récupérer toutes les planètes de la scène
     const meshes = this.planets.map(p => p.mesh);
-
-    // 4. Vérifier si le laser touche l'une d'entre elles
     const intersects = this.raycaster.intersectObjects(meshes);
 
     if (intersects.length > 0) {
-      // On récupère les données cachées dans la première planète touchée
-      const clickedPlanet = intersects[0].object;
-      this.selectedProject = clickedPlanet.userData;
+      this.selectedProject = intersects[0].object.userData;
     }
   }
 
