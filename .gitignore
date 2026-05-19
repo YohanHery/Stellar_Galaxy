@@ -1,0 +1,15 @@
+# Dépendances Backend (Symfony)
+api/vendor/
+api/.env.local
+api/.phpunit.result.cache
+
+# Dépendances Frontend (Angular)
+front/node_modules/
+front/dist/
+front/.angular/
+
+# Fichiers de configuration IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

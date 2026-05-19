@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+    database:
+        image: mariadb:10.11
+        container_name: portfolio_db
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: portfolio_db
+            MYSQL_USER: portfolio_user
+            MYSQL_PASSWORD: portfolio_password
+        ports:
+            # Expose le port 3306 de ton conteneur vers ton ordinateur local
+            - "3306:3306"
+        volumes:
+            # Permet de sauvegarder les données même si le conteneur est détruit
+            - db_data:/var/lib/mysql
+
+volumes:
+    db_data:
